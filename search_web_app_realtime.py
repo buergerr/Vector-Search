@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import numpy as np
 import math
 from sklearn.metrics.pairwise import cosine_similarity
+from functools import lru_cache
 from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device
 from config import MODEL_OPTIONS, INDEX_NAMES  # Import model and index options
 
@@ -21,8 +22,15 @@ result_count = 50  # Number of results to return
 # Initialize Pinecone
 pc = Pinecone(api_key=os.getenv('PINECONE_APIKEY'))
 
+# Cache embeddings for frequently used queries
+@lru_cache(maxsize=128)
+def get_cached_embedding(query, tokenizer, model, device):
+    print(f"Creating embedding for query: {query}")
+    return create_embeddings([query], tokenizer, model, device)[0]
+
 # Function to create embeddings
 def create_embeddings(text_list, tokenizer, model, device):
+    print(f"Creating embeddings for text list: {text_list}")
     inputs = tokenizer(text_list, return_tensors='pt', padding=True, truncation=True).to(device)
     with torch.no_grad():
         outputs = model(**inputs)
@@ -46,16 +54,26 @@ def ndcg(relevances):
 
 # Function to search for similar items and calculate NDCG
 def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k=result_count):
+    print(f"Search started with model '{model_name}' and index '{index_name}'")
+
     tokenizer, model = initialize_model_and_tokenizer(model_name)
     device = move_model_to_device(model)
+
+    print(f"Model and tokenizer initialized. Device: {device}")
+
     index = pc.Index(index_name)
-    query_embedding = create_embeddings([query], tokenizer, model, device)[0]
+    query_embedding = get_cached_embedding(query, tokenizer, model, device)
+
+    print(f"Query embedding created: {query_embedding}")
+
     results = index.query(
         vector=query_embedding.tolist(),
         top_k=top_k,
         include_values=True,  # Include the stored embeddings in the response
         include_metadata=True
     )
+
+    print(f"Query to Pinecone index completed. Number of matches: {len(results['matches'])}")
 
     search_results = []
     base_url = os.getenv('PRODUCT_IMG_BASE_URL')
@@ -81,21 +99,18 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
             'similarity_score': similarity_score  # Add similarity score to the results
         })
 
-    # Sort results by similarity score in descending order
+    print("Sorting search results by similarity score.")
     search_results = sorted(search_results, key=lambda x: x['similarity_score'], reverse=True)
 
-    # Apply cutoff: Keep results within the given percentage of the highest similarity score
     if search_results:
         highest_similarity_score = search_results[0]['similarity_score']
         cutoff_threshold = highest_similarity_score * (cutoff_percentage / 100.0)
         search_results = [result for result in search_results if result['similarity_score'] >= cutoff_threshold]
 
-    # Extract relevance scores (for demonstration, using the similarity scores as relevance)
     relevances = [result['similarity_score'] for result in search_results]
-
-    # Calculate NDCG
     ndcg_value = ndcg(relevances)
 
+    print(f"Search completed. NDCG value: {ndcg_value}")
     return search_results, ndcg_value
 
 # Define the route for the home page
@@ -110,8 +125,12 @@ def search():
     index_name = request.form['index_name']
     model_name = request.form['model_name']
     cutoff_percentage = float(request.form['cutoff'])
+
+    print(f"Received search request. Query: '{query}', Index: '{index_name}', Model: '{model_name}', Cutoff: {cutoff_percentage}%")
+
     search_results, ndcg_value = search_similar_items(query, index_name, model_name, cutoff_percentage)
 
+    print("Sending response back to client.")
     return jsonify({
         'search_results': search_results,
         'ndcg_value': ndcg_value

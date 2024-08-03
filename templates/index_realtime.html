@@ -111,6 +111,20 @@
 
     </style>
     <script>
+        // Debounce function to delay execution
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Function to perform search
         function performSearch() {
             const query = document.getElementById('query').value;
             const indexName = document.getElementById('index_name').value;
@@ -153,9 +167,10 @@
             .catch(error => console.error('Error:', error));
         }
 
-        // Add event listener for real-time search
+        // Add event listener for real-time search with debounce
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('query').addEventListener('input', performSearch);
+            const debouncedSearch = debounce(performSearch, 250);  // 1000ms = 1 second
+            document.getElementById('query').addEventListener('input', debouncedSearch);
         });
 </script>
 </head>
