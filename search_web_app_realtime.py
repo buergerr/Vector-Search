@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from config import MODEL_OPTIONS, INDEX_NAMES
 from utils.embedding_utils import create_embeddings, get_cached_embedding, compare_embeddings, initialize_pinecone
 from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device
-import numpy as np  # Make sure to import numpy
+import numpy as np
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -17,15 +17,26 @@ result_count = 50  # Number of results to return
 # Initialize Pinecone
 pc = initialize_pinecone(os.getenv('PINECONE_APIKEY'))
 
+# Global dictionary to store the model and tokenizer
+model_store = {}
+
+# Function to load or get model and tokenizer
+def get_model_and_tokenizer(model_name):
+    if model_name not in model_store:
+        print(f"Initializing model and tokenizer for: {model_name}")
+        tokenizer, model = initialize_model_and_tokenizer(model_name)
+        device = move_model_to_device(model)  # Move model to device and capture the device
+        model_store[model_name] = (tokenizer, model, device)
+    else:
+        print(f"Reusing model and tokenizer for: {model_name}")
+    return model_store[model_name]
+
 # Function to search for similar items
 def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k=result_count):
     print(f"Search started with model '{model_name}' and index '{index_name}'")
 
-    tokenizer, model = initialize_model_and_tokenizer(model_name)
-    device = move_model_to_device(model)
-
-    print(f"Model and tokenizer initialized. Device: {device}")
-
+    tokenizer, model, device = get_model_and_tokenizer(model_name)
+    
     index = pc.Index(index_name)
     query_embedding = get_cached_embedding(query, tokenizer, model, device)
 
@@ -48,7 +59,7 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
         manufacturer = match['metadata'].get('manufacturer', 'Unknown')
 
         # Use the stored embedding from Pinecone
-        stored_embedding = np.array(match['values'])  # Ensure numpy is imported
+        stored_embedding = np.array(match['values'])
 
         # Calculate similarity between the query embedding and the stored embedding
         similarity_score = compare_embeddings(query_embedding, stored_embedding)
