@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from dotenv import load_dotenv
+import torch
 from model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options
 from embedding_utils import remove_stopwords, normalize_text, create_embeddings, initialize_pinecone, upsert_vectors
 
@@ -33,6 +34,12 @@ df['combined_text'] = df['combined_text'].apply(normalize_text)
 # Initialize the model and tokenizer
 tokenizer, model = initialize_model_and_tokenizer(selected_model)
 device = move_model_to_device(model)
+
+# Check if the model is on the GPU
+if device.type == 'cuda':
+    print(f"Using GPU: {torch.cuda.get_device_name(device)}")
+else:
+    print("Using CPU")
 
 # Create embeddings
 embeddings = create_embeddings(df['combined_text'].tolist(), tokenizer, model, device)

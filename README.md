@@ -42,20 +42,6 @@ This project demonstrates a real-time search application that utilizes pre-train
     pip install -r requirements.txt
     ```
 
-    If you don't have a `requirements.txt` file, create one with the following content:
-    ```text
-    pandas
-    transformers
-    torch
-    pinecone-client
-    python-dotenv
-    nltk
-    tqdm
-    Flask
-    numpy
-    scikit-learn
-    ```
-
 3. **Set up environment variables**:
     Create a `.env` file in the root directory and add your Pinecone API key:
     ```env

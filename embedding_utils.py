@@ -2,8 +2,10 @@ import re
 import torch
 from tqdm import tqdm
 from nltk.corpus import stopwords
-import pinecone
 from transformers import AutoTokenizer, AutoModel
+from torch.amp import autocast
+import pinecone
+from pinecone import Pinecone, ServerlessSpec
 
 # Text preprocessing functions
 def remove_stopwords(text, language='german'):
@@ -21,21 +23,26 @@ def normalize_text(text):
     return text
 
 # Embedding creation function
-def create_embeddings(text_list, tokenizer, model, device, batch_size=16):
+def create_embeddings(text_list, tokenizer, model, device, batch_size=32):
     embeddings = []
     for i in tqdm(range(0, len(text_list), batch_size), desc="Creating embeddings"):
         batch_texts = text_list[i:i+batch_size]
         inputs = tokenizer(batch_texts, return_tensors='pt', padding=True, truncation=True).to(device)
+        
         with torch.no_grad():
-            outputs = model(**inputs)
+            with autocast(device_type='cuda'):
+                outputs = model(**inputs)
+        
         batch_embeddings = outputs.last_hidden_state.mean(dim=1).cpu().numpy()
         embeddings.extend(batch_embeddings)
+    
     return embeddings
+
 
 # Pinecone operations
 def initialize_pinecone(api_key):
-    pinecone.init(api_key=api_key)
-    return pinecone
+    pc = Pinecone(api_key=api_key)
+    return pc
 
 def upsert_vectors(index_name, pc, df, embeddings, embedding_dim, batch_size=100):
     if index_name not in pc.list_indexes().names():
@@ -43,7 +50,7 @@ def upsert_vectors(index_name, pc, df, embeddings, embedding_dim, batch_size=100
             name=index_name,
             dimension=embedding_dim,
             metric='cosine',
-            spec=pinecone.ServerlessSpec(
+            spec=ServerlessSpec(
                 cloud='aws',
                 region='us-east-1'
             )
