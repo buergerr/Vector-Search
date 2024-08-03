@@ -1,5 +1,6 @@
 .env
 csv/*
 __pycache__/*
+utils/__pycache__/*
 .venv/*
-
+config.py

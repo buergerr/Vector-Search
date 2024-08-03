@@ -114,6 +114,7 @@
         function performSearch() {
             const query = document.getElementById('query').value;
             const indexName = document.getElementById('index_name').value;
+            const modelName = document.getElementById('model_name').value;
             const cutoff = document.getElementById('cutoff').value;
 
             // Send AJAX request to perform search
@@ -122,7 +123,7 @@
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: `query=${query}&index_name=${indexName}&cutoff=${cutoff}`
+                body: `query=${query}&index_name=${indexName}&model_name=${modelName}&cutoff=${cutoff}`
             })
             .then(response => response.json())
             .then(data => {
@@ -152,16 +153,11 @@
             .catch(error => console.error('Error:', error));
         }
 
-        function setSampleQuery(category, query) {
-            document.getElementById('query').value = query;
-            performSearch();
-        }
-
         // Add event listener for real-time search
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('query').addEventListener('input', performSearch);
         });
-    </script>
+</script>
 </head>
 <body>
     <h1>Vector Search Application</h1>
@@ -172,11 +168,16 @@
 
             <label for="index_name">Choose an index:</label>
             <select id="index_name" name="index_name">
-                <option value="50k-xlm-roberta-base-de-en">50k (PM-AI/sts_paraphrase_xlm-roberta-base_de-en)</option>
-                <option value="7k-xlm-roberta-base-de-en">7k (PM-AI/sts_paraphrase_xlm-roberta-base_de-en)</option>            
-                <!-- Add more index options as needed -->
+                {% for index_value, index_label in index_names.items() %}
+                    <option value="{{ index_value }}">{{ index_label }}</option>
+                {% endfor %}
             </select>
-
+            <label for="model_name">Choose a model:</label>          
+            <select id="model_name" name="model_name">
+                {% for model_value, model_label in model_options.items() %}
+                    <option value="{{ model_value }}">{{ model_label }}</option>
+                {% endfor %}
+            </select>                               
             <label for="cutoff">Cutoff Percentage:</label>
             <input type="number" id="cutoff" name="cutoff" value="10" min="0" max="100">
         </form>
@@ -218,6 +219,6 @@
 
     <h2>Search Results</h2>
     <p id="ndcg">NDCG Score:</p>
-    <div class="grid-container" id="results"></div>
+    <div class="grid-container" id="results"></div>    
 </body>
 </html>

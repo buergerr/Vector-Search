@@ -1,13 +1,14 @@
 from flask import Flask, request, render_template, jsonify
 import os
-from transformers import DistilBertTokenizer, DistilBertModel
+from transformers import AutoTokenizer, AutoModel
 import torch
 from pinecone import Pinecone
 from dotenv import load_dotenv
 import numpy as np
 import math
 from sklearn.metrics.pairwise import cosine_similarity
-from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options  # Import model options
+from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device
+from config import MODEL_OPTIONS, INDEX_NAMES  # Import model and index options
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -15,21 +16,13 @@ app = Flask(__name__)
 # Load environment variables from .env file
 load_dotenv()
 
-# Choose the model you want to use (e.g., the first one)
-selected_model = model_options[3]
 result_count = 50  # Number of results to return
-
-# Initialize the selected model and tokenizer
-tokenizer, model = initialize_model_and_tokenizer(selected_model)
-
-# Move model to GPU if available, else use CPU
-device = move_model_to_device(model)
 
 # Initialize Pinecone
 pc = Pinecone(api_key=os.getenv('PINECONE_APIKEY'))
 
 # Function to create embeddings
-def create_embeddings(text_list):
+def create_embeddings(text_list, tokenizer, model, device):
     inputs = tokenizer(text_list, return_tensors='pt', padding=True, truncation=True).to(device)
     with torch.no_grad():
         outputs = model(**inputs)
@@ -52,9 +45,11 @@ def ndcg(relevances):
     return dcg_value / idcg_value if idcg_value > 0 else 0
 
 # Function to search for similar items and calculate NDCG
-def search_similar_items(query, index_name, cutoff_percentage, top_k=result_count):
+def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k=result_count):
+    tokenizer, model = initialize_model_and_tokenizer(model_name)
+    device = move_model_to_device(model)
     index = pc.Index(index_name)
-    query_embedding = create_embeddings([query])[0]
+    query_embedding = create_embeddings([query], tokenizer, model, device)[0]
     results = index.query(
         vector=query_embedding.tolist(),
         top_k=top_k,
@@ -106,15 +101,16 @@ def search_similar_items(query, index_name, cutoff_percentage, top_k=result_coun
 # Define the route for the home page
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('index_realtime.html')
+    return render_template('index_realtime.html', model_options=MODEL_OPTIONS, index_names=INDEX_NAMES)
 
 # Define the route for real-time search
 @app.route('/search', methods=['POST'])
 def search():
     query = request.form['query']
     index_name = request.form['index_name']
+    model_name = request.form['model_name']
     cutoff_percentage = float(request.form['cutoff'])
-    search_results, ndcg_value = search_similar_items(query, index_name, cutoff_percentage)
+    search_results, ndcg_value = search_similar_items(query, index_name, model_name, cutoff_percentage)
 
     return jsonify({
         'search_results': search_results,

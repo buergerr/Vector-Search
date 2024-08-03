@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import numpy as np
 import math
 from sklearn.metrics.pairwise import cosine_similarity
-from model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options  # Import model options
+from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options  # Import model options
 
 # Initialize the Flask application
 app = Flask(__name__)
