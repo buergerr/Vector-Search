@@ -2,8 +2,8 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 import torch
-from model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options
-from embedding_utils import remove_stopwords, normalize_text, create_embeddings, initialize_pinecone, upsert_vectors
+from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options
+from utils.embedding_utils import remove_stopwords, normalize_text, create_embeddings, initialize_pinecone, upsert_vectors
 
 # Load environment variables
 load_dotenv()

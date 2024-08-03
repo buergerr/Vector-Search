@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import numpy as np
 import math
 from sklearn.metrics.pairwise import cosine_similarity
-from model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options  # Import model options
+from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device, model_options  # Import model options
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -16,7 +16,7 @@ app = Flask(__name__)
 load_dotenv()
 
 # Choose the model you want to use (e.g., the first one)
-selected_model = model_options[5]
+selected_model = model_options[3]
 result_count = 50  # Number of results to return
 
 # Initialize the selected model and tokenizer
@@ -66,7 +66,7 @@ def search_similar_items(query, index_name, cutoff_percentage, top_k=result_coun
     base_url = os.getenv('PRODUCT_IMG_BASE_URL')
 
     for match in results['matches']:
-        image_url = base_url + match['metadata'].get('imageurl', 'default_image.jpg')
+        image_url = base_url + match['metadata'].get('imageurl', 'default_image.jpg') + os.getenv('PRODUCT_IMG_SUFFIX')
         short_descr = match['metadata'].get('shortdescrdisplay', 'No description available')
         minprice = match['metadata'].get('minprice', 'N/A')
         manufacturer = match['metadata'].get('manufacturer', 'Unknown')
