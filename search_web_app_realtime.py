@@ -5,7 +5,6 @@ import torch
 from pinecone import Pinecone
 from dotenv import load_dotenv
 import numpy as np
-import math
 from sklearn.metrics.pairwise import cosine_similarity
 from functools import lru_cache
 from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device
@@ -41,18 +40,7 @@ def compare_embeddings(query_embedding, result_embedding):
     similarity = cosine_similarity([query_embedding], [result_embedding])
     return similarity[0][0]
 
-# Function to calculate DCG
-def dcg(relevances):
-    return sum([rel / math.log2(idx + 2) for idx, rel in enumerate(relevances)])
-
-# Function to calculate NDCG
-def ndcg(relevances):
-    dcg_value = dcg(relevances)
-    ideal_relevances = sorted(relevances, reverse=True)
-    idcg_value = dcg(ideal_relevances)
-    return dcg_value / idcg_value if idcg_value > 0 else 0
-
-# Function to search for similar items and calculate NDCG
+# Function to search for similar items
 def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k=result_count):
     print(f"Search started with model '{model_name}' and index '{index_name}'")
 
@@ -107,11 +95,8 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
         cutoff_threshold = highest_similarity_score * (cutoff_percentage / 100.0)
         search_results = [result for result in search_results if result['similarity_score'] >= cutoff_threshold]
 
-    relevances = [result['similarity_score'] for result in search_results]
-    ndcg_value = ndcg(relevances)
-
-    print(f"Search completed. NDCG value: {ndcg_value}")
-    return search_results, ndcg_value
+    print(f"Search completed.")
+    return search_results
 
 # Define the route for the home page
 @app.route('/', methods=['GET'])
@@ -128,12 +113,11 @@ def search():
 
     print(f"Received search request. Query: '{query}', Index: '{index_name}', Model: '{model_name}', Cutoff: {cutoff_percentage}%")
 
-    search_results, ndcg_value = search_similar_items(query, index_name, model_name, cutoff_percentage)
+    search_results = search_similar_items(query, index_name, model_name, cutoff_percentage)
 
     print("Sending response back to client.")
     return jsonify({
-        'search_results': search_results,
-        'ndcg_value': ndcg_value
+        'search_results': search_results
     })
 
 # Start the Flask application

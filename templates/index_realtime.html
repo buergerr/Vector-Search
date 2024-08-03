@@ -4,175 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vector Search</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f5;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #444;
-        }
-
-        .container {
-            display: flex;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-            gap: 20px;
-        }
-
-        form {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            flex: 1;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        form label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        form input[type="text"],
-        form input[type="number"],
-        form select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        form input[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        form input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-
-        .sample-queries {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            flex: 1;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .sample-queries h2 {
-            margin-top: 0;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 0;
-            list-style: none;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .grid-item {
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .grid-item img {
-            max-width: 100%;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        .grid-item p {
-            margin: 5px 0;
-        }
-
-    </style>
-    <script>
-        // Debounce function to delay execution
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Function to perform search
-        function performSearch() {
-            const query = document.getElementById('query').value;
-            const indexName = document.getElementById('index_name').value;
-            const modelName = document.getElementById('model_name').value;
-            const cutoff = document.getElementById('cutoff').value;
-
-            // Send AJAX request to perform search
-            fetch('/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `query=${query}&index_name=${indexName}&model_name=${modelName}&cutoff=${cutoff}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update search results on the page
-                const resultsContainer = document.getElementById('results');
-                resultsContainer.innerHTML = '';
-
-                if (data.search_results.length > 0) {
-                    data.search_results.forEach(result => {
-                        const resultItem = document.createElement('div');
-                        resultItem.className = 'grid-item';
-                        resultItem.innerHTML = `
-                            <img src="${result.image_url}" alt="Product Image">
-                            <p><strong>${result.short_descr}</strong></p>
-                            <p>Price: ${result.minprice}</p>
-                            <p>Manufacturer: ${result.manufacturer}</p>
-                            <p>Similarity Score: ${result.similarity_score}</p>
-                        `;
-                        resultsContainer.appendChild(resultItem);
-                    });
-                } else {
-                    resultsContainer.innerHTML = '<p>No results found.</p>';
-                }
-
-                document.getElementById('ndcg').textContent = `NDCG Score: ${data.ndcg_value}`;
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
-        // Add event listener for real-time search with debounce
-        document.addEventListener('DOMContentLoaded', function() {
-            const debouncedSearch = debounce(performSearch, 250);  // 1000ms = 1 second
-            document.getElementById('query').addEventListener('input', debouncedSearch);
-        });
-</script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <h1>Vector Search Application</h1>
@@ -187,12 +19,14 @@
                     <option value="{{ index_value }}">{{ index_label }}</option>
                 {% endfor %}
             </select>
+
             <label for="model_name">Choose a model:</label>          
             <select id="model_name" name="model_name">
                 {% for model_value, model_label in model_options.items() %}
                     <option value="{{ model_value }}">{{ model_label }}</option>
                 {% endfor %}
             </select>                               
+
             <label for="cutoff">Cutoff Percentage:</label>
             <input type="number" id="cutoff" name="cutoff" value="10" min="0" max="100">
         </form>
@@ -200,40 +34,13 @@
         <div class="sample-queries">
             <h2>Sample Queries</h2>
 
-            <h3>Mode</h3>
-            <select onchange="setSampleQuery('Mode', this.value)">
-                <option value="">Select a sample query</option>
-                <option value="Sommerkleid mit Blumenmuster">Sommerkleid mit Blumenmuster</option>
-                <option value="Schwarze Jeans für Herren">Schwarze Jeans für Herren</option>
-                <option value="Warmer Wintermantel mit Kapuze">Warmer Wintermantel mit Kapuze</option>
-                <option value="Elegante Abendkleider in Rot">Elegante Abendkleider in Rot</option>
-                <option value="Sportbekleidung für Damen">Sportbekleidung für Damen</option>
-                <option value="Bequeme Hausschuhe für den Winter">Bequeme Hausschuhe für den Winter</option>
-                <option value="Kinder Regenjacke mit Reflektoren">Kinder Regenjacke mit Reflektoren</option>
-                <option value="Modische Lederhandschuhe für Damen">Modische Lederhandschuhe für Damen</option>
-                <option value="Kariertes Hemd aus Flanell">Kariertes Hemd aus Flanell</option>
-                <option value="Weißes T-Shirt mit V-Ausschnitt">Weißes T-Shirt mit V-Ausschnitt</option>
-            </select>
-
-            <h3>Multimedia</h3>
-            <select onchange="setSampleQuery('Multimedia', this.value)">
-                <option value="">Select a sample query</option>
-                <option value="4K Ultra HD Fernseher">4K Ultra HD Fernseher</option>
-                <option value="Bluetooth-Kopfhörer mit Geräuschunterdrückung">Bluetooth-Kopfhörer mit Geräuschunterdrückung</option>
-                <option value="Laptop mit Intel Core i7 Prozessor">Laptop mit Intel Core i7 Prozessor</option>
-                <option value="Smartphone mit OLED-Display">Smartphone mit OLED-Display</option>
-                <option value="Digitalkamera mit 24 Megapixeln">Digitalkamera mit 24 Megapixeln</option>
-                <option value="Gaming-Maus mit RGB-Beleuchtung">Gaming-Maus mit RGB-Beleuchtung</option>
-                <option value="Tablet mit 10 Zoll Display">Tablet mit 10 Zoll Display</option>
-                <option value="Smartwatch mit Pulsmesser">Smartwatch mit Pulsmesser</option>
-                <option value="Externe Festplatte 1TB">Externe Festplatte 1TB</option>
-                <option value="Kabelloses Ladegerät für Smartphones">Kabelloses Ladegerät für Smartphones</option>
-            </select>
+            <!-- Sample queries here -->
         </div>
     </div>
 
-    <h2>Search Results</h2>
-    <p id="ndcg">NDCG Score:</p>
+    <h2>Search Results</h2>    
     <div class="grid-container" id="results"></div>    
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>
