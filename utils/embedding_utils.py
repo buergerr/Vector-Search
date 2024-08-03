@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModel
 from torch.amp import autocast
 import pinecone
 from pinecone import Pinecone, ServerlessSpec
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Text preprocessing functions
 def remove_stopwords(text, language='german'):
@@ -22,7 +23,7 @@ def normalize_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-# Embedding creation function
+# Embedding functions
 def create_embeddings(text_list, tokenizer, model, device, batch_size=32):
     embeddings = []
     for i in tqdm(range(0, len(text_list), batch_size), desc="Creating embeddings"):
@@ -37,6 +38,14 @@ def create_embeddings(text_list, tokenizer, model, device, batch_size=32):
         embeddings.extend(batch_embeddings)
     
     return embeddings
+
+def get_cached_embedding(query, tokenizer, model, device):
+    print(f"Creating embedding for query: {query}")
+    return create_embeddings([query], tokenizer, model, device)[0]
+
+def compare_embeddings(query_embedding, result_embedding):
+    similarity = cosine_similarity([query_embedding], [result_embedding])
+    return similarity[0][0]
 
 
 # Pinecone operations

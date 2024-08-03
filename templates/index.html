@@ -4,190 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vector Search</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f5;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #444;
-        }
-
-        form {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto 20px auto;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        form label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        form input[type="text"],
-        form input[type="number"],
-        form select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        form input[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        form input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-
-        h2 {
-            margin-top: 40px;
-            color: #444;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        ul li {
-            background-color: #fff;
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-        }
-
-        ul li img {
-            margin-right: 20px;
-            border-radius: 4px;
-        }
-
-        ul li p {
-            margin: 0;
-            line-height: 1.5;
-        }
-
-        .sample-queries {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .sample-queries h3 {
-            margin-top: 0;
-        }
-
-        .sample-queries ul li {
-            background-color: transparent;
-            padding: 5px 0;
-            display: block;
-        }
-
-        .sample-queries ul li a {
-            color: #007BFF;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .sample-queries ul li a:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <h1>Vector Search Application</h1>
-    <form method="post">
-        <label for="query">Enter your search query:</label>
-        <input type="text" id="query" name="query" required>
+    <div class="container">
+        <form>
+            <label for="query">Enter your search query:</label>
+            <input type="text" id="query" name="query" required>
 
-        <label for="index_name">Choose an index:</label>
-        <select id="index_name" name="index_name">
-            <option value="50k-xlm_roberta_base_de_en">50k (PM-AI/sts_paraphrase_xlm-roberta-base_de-en)</option>
-            <option value="7k-xlm_roberta_base_de_en">7k (PM-AI/sts_paraphrase_xlm-roberta-base_de-en)</option>
-            <option value="index_name_3">Index Name 3</option>
-        </select>
+            <label for="index_name">Choose an index:</label>
+            <select id="index_name" name="index_name">
+                {% for index_value, index_label in index_names.items() %}
+                    <option value="{{ index_value }}">{{ index_label }}</option>
+                {% endfor %}
+            </select>
 
-        <label for="cutoff">Cutoff Percentage:</label>
-        <input type="number" id="cutoff" name="cutoff" value="10" min="0" max="100">
+            <label for="model_name">Choose a model:</label>          
+            <select id="model_name" name="model_name">
+                {% for model_value, model_label in model_options.items() %}
+                    <option value="{{ model_value }}">{{ model_label }}</option>
+                {% endfor %}
+            </select>                               
 
-        <input type="submit" value="Search">
-    </form>
+            <label for="cutoff">Cutoff Percentage:</label>
+            <input type="number" id="cutoff" name="cutoff" value="10" min="0" max="100">
+        </form>
 
-    <div class="sample-queries">
-        <h2>Sample Queries</h2>
+        <div class="sample-queries">
+            <h2>Sample Queries</h2>
 
-        <h3>Mode</h3>
-        <ul>
-            <li><a href="#" onclick="document.getElementById('query').value='Sommerkleid mit Blumenmuster'; document.forms[0].submit();">Sommerkleid mit Blumenmuster</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Schwarze Jeans für Herren'; document.forms[0].submit();">Schwarze Jeans für Herren</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Warmer Wintermantel mit Kapuze'; document.forms[0].submit();">Warmer Wintermantel mit Kapuze</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Elegante Abendkleider in Rot'; document.forms[0].submit();">Elegante Abendkleider in Rot</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Sportbekleidung für Damen'; document.forms[0].submit();">Sportbekleidung für Damen</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Bequeme Hausschuhe für den Winter'; document.forms[0].submit();">Bequeme Hausschuhe für den Winter</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Kinder Regenjacke mit Reflektoren'; document.forms[0].submit();">Kinder Regenjacke mit Reflektoren</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Modische Lederhandschuhe für Damen'; document.forms[0].submit();">Modische Lederhandschuhe für Damen</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Kariertes Hemd aus Flanell'; document.forms[0].submit();">Kariertes Hemd aus Flanell</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Weißes T-Shirt mit V-Ausschnitt'; document.forms[0].submit();">Weißes T-Shirt mit V-Ausschnitt</a></li>
-        </ul>
-
-        <h3>Multimedia</h3>
-        <ul>
-            <li><a href="#" onclick="document.getElementById('query').value='4K Ultra HD Fernseher'; document.forms[0].submit();">4K Ultra HD Fernseher</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Bluetooth-Kopfhörer mit Geräuschunterdrückung'; document.forms[0].submit();">Bluetooth-Kopfhörer mit Geräuschunterdrückung</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Laptop mit Intel Core i7 Prozessor'; document.forms[0].submit();">Laptop mit Intel Core i7 Prozessor</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Smartphone mit OLED-Display'; document.forms[0].submit();">Smartphone mit OLED-Display</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Digitalkamera mit 24 Megapixeln'; document.forms[0].submit();">Digitalkamera mit 24 Megapixeln</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Gaming-Maus mit RGB-Beleuchtung'; document.forms[0].submit();">Gaming-Maus mit RGB-Beleuchtung</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Tablet mit 10 Zoll Display'; document.forms[0].submit();">Tablet mit 10 Zoll Display</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Smartwatch mit Pulsmesser'; document.forms[0].submit();">Smartwatch mit Pulsmesser</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Externe Festplatte 1TB'; document.forms[0].submit();">Externe Festplatte 1TB</a></li>
-            <li><a href="#" onclick="document.getElementById('query').value='Kabelloses Ladegerät für Smartphones'; document.forms[0].submit();">Kabelloses Ladegerät für Smartphones</a></li>
-        </ul>
+            <!-- Sample queries here -->
+        </div>
     </div>
 
-    {% if search_results %}
-        <h2>Search Results for "{{ query }}"</h2>
-        <p>NDCG Score: {{ ndcg_value }}</p>
-        <ul>
-            {% for result in search_results %}
-            <li>
-                <img src="{{ result.image_url }}" alt="Product Image" style="max-width:200px;">
-                <div>
-                    <p><strong>{{ result.short_descr }}</strong></p>
-                    <p>Price: {{ result.minprice }}</p>
-                    <p>Manufacturer: {{ result.manufacturer }}</p>
-                    <p>Similarity Score: {{ result.similarity_score }}</p>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <h2>Search Results</h2>    
+    <div class="grid-container" id="results"></div>    
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>

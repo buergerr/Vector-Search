@@ -54,6 +54,6 @@ function performSearch() {
 
 // Add event listener for real-time search with debounce
 document.addEventListener('DOMContentLoaded', function() {
-    const debouncedSearch = debounce(performSearch, 250);  // 250ms = 0.25 seconds
+    const debouncedSearch = debounce(performSearch, 500);  // 250ms = 0.25 seconds
     document.getElementById('query').addEventListener('input', debouncedSearch);
 });

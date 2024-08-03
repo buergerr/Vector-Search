@@ -1,14 +1,10 @@
 from flask import Flask, request, render_template, jsonify
 import os
-from transformers import AutoTokenizer, AutoModel
-import torch
-from pinecone import Pinecone
 from dotenv import load_dotenv
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from functools import lru_cache
+from config import MODEL_OPTIONS, INDEX_NAMES
+from utils.embedding_utils import create_embeddings, get_cached_embedding, compare_embeddings, initialize_pinecone
 from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device
-from config import MODEL_OPTIONS, INDEX_NAMES  # Import model and index options
+import numpy as np  # Make sure to import numpy
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -19,26 +15,7 @@ load_dotenv()
 result_count = 50  # Number of results to return
 
 # Initialize Pinecone
-pc = Pinecone(api_key=os.getenv('PINECONE_APIKEY'))
-
-# Cache embeddings for frequently used queries
-@lru_cache(maxsize=128)
-def get_cached_embedding(query, tokenizer, model, device):
-    print(f"Creating embedding for query: {query}")
-    return create_embeddings([query], tokenizer, model, device)[0]
-
-# Function to create embeddings
-def create_embeddings(text_list, tokenizer, model, device):
-    print(f"Creating embeddings for text list: {text_list}")
-    inputs = tokenizer(text_list, return_tensors='pt', padding=True, truncation=True).to(device)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    return outputs.last_hidden_state.mean(dim=1).cpu().numpy()
-
-# Function to compare embeddings using cosine similarity
-def compare_embeddings(query_embedding, result_embedding):
-    similarity = cosine_similarity([query_embedding], [result_embedding])
-    return similarity[0][0]
+pc = initialize_pinecone(os.getenv('PINECONE_APIKEY'))
 
 # Function to search for similar items
 def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k=result_count):
@@ -52,12 +29,10 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
     index = pc.Index(index_name)
     query_embedding = get_cached_embedding(query, tokenizer, model, device)
 
-    print(f"Query embedding created: {query_embedding}")
-
     results = index.query(
         vector=query_embedding.tolist(),
         top_k=top_k,
-        include_values=True,  # Include the stored embeddings in the response
+        include_values=True,
         include_metadata=True
     )
 
@@ -73,7 +48,7 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
         manufacturer = match['metadata'].get('manufacturer', 'Unknown')
 
         # Use the stored embedding from Pinecone
-        stored_embedding = np.array(match['values'])
+        stored_embedding = np.array(match['values'])  # Ensure numpy is imported
 
         # Calculate similarity between the query embedding and the stored embedding
         similarity_score = compare_embeddings(query_embedding, stored_embedding)
@@ -84,7 +59,7 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
             'minprice': minprice,
             'manufacturer': manufacturer,
             'score': match['score'],
-            'similarity_score': similarity_score  # Add similarity score to the results
+            'similarity_score': similarity_score
         })
 
     print("Sorting search results by similarity score.")
@@ -95,13 +70,13 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
         cutoff_threshold = highest_similarity_score * (cutoff_percentage / 100.0)
         search_results = [result for result in search_results if result['similarity_score'] >= cutoff_threshold]
 
-    print(f"Search completed.")
+    print("Search completed.")
     return search_results
 
 # Define the route for the home page
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('index_realtime.html', model_options=MODEL_OPTIONS, index_names=INDEX_NAMES)
+    return render_template('index.html', model_options=MODEL_OPTIONS, index_names=INDEX_NAMES)
 
 # Define the route for real-time search
 @app.route('/search', methods=['POST'])
