@@ -1,0 +1,10 @@
+pandas
+transformers
+torch
+pinecone-client
+python-dotenv
+nltk
+tqdm
+Flask
+numpy
+scikit-learn
