@@ -6,5 +6,5 @@ python-dotenv
 nltk
 tqdm
 Flask
-numpy
+numpy<2
 scikit-learn
