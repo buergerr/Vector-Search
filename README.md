@@ -70,6 +70,9 @@ This project demonstrates a real-time search application that utilizes pre-train
     python -c "import nltk; nltk.download('stopwords')"
     ```
 
+5. **configure the model**:
+    Adjust or modify the `config_template.py` with your model configuration and save it as `config.py`.
+
 ## Embedding Instructions
 
 1. **Configure Your Environment**:
@@ -125,12 +128,8 @@ docker build -t vector-search:latest .
 
 ### Run the Docker Container
 
-**Run the Docker container** with local env file:
-```bash
-docker run -d -p 5000:5000 --env-file .env vector-search:latest
-```
+**Run the Docker container**
 
-**Run the Docker container** with environment variables:
 ```bash
 docker run -d \
   -p 5000:5000  \
