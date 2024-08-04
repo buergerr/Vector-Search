@@ -84,6 +84,13 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
     print("Search completed.")
     return search_results
 
+@app.route('/health', methods=['GET'])
+def health():
+    resp = jsonify(health="healthy")
+    resp.status_code = 200
+
+    return resp
+
 # Define the route for the home page
 @app.route('/', methods=['GET'])
 def home():
@@ -145,4 +152,4 @@ def related_products():
 
 # Start the Flask application
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

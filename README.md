@@ -70,6 +70,9 @@ This project demonstrates a real-time search application that utilizes pre-train
     python -c "import nltk; nltk.download('stopwords')"
     ```
 
+5. **configure the model**:
+    Adjust or modify the `config_template.py` with your model configuration and save it as `config.py`.
+
 ## Embedding Instructions
 
 1. **Configure Your Environment**:
@@ -108,6 +111,41 @@ This project demonstrates a real-time search application that utilizes pre-train
 3. **Search for Similar Items**:
     - Use the web interface to input a search query and find items with similar embeddings in the Pinecone index.
     - The search results will be ranked based on cosine similarity.
+
+## Dockerization
+
+### Build the Docker Image
+
+The Base Docker image is `python:3.8`. Check the [Dockerfile](Dockerfile) for more details.
+
+**Build the Docker image**:
+
+Run the following command to build the Docker image:
+
+```bash
+docker build -t vector-search:latest .
+```
+
+### Run the Docker Container
+
+**Run the Docker container**
+
+```bash
+docker run -d \
+  -p 5000:5000  \
+  -e PINECONE_API_KEY=your_pinecone_api_key \
+  -e PINECONE_INDEX_NAME=your_index_name \
+  -e PRODUCT_IMG_BASE_URL=your_image_base_url \
+  -e PRODUCT_IMG_SUFFIX=your_image_suffix \
+  -e CSV_FILE_PATH=your_csv_file_path \
+  --name vector-search \
+  vector-search:latest
+```
+
+**Stop the Docker container**:
+```bash
+docker stop vector-search
+```
 
 ## Contributing
 
