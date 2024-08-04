@@ -9,7 +9,7 @@ This project demonstrates a real-time search application that utilizes pre-train
 - **Embedding Creation**: Uses transformer models to generate embeddings for text data.
 - **Pinecone Integration**: Efficiently stores and retrieves embeddings for real-time search.
 - **Real-Time Search**: Allows users to search for similar items based on query embeddings.
-- **NDCG Calculation**: Evaluates search relevance using Normalized Discounted Cumulative Gain (NDCG).
+
 
 ## Requirements
 
@@ -43,9 +43,25 @@ This project demonstrates a real-time search application that utilizes pre-train
     ```
 
 3. **Set up environment variables**:
-    Create a `.env` file in the root directory and add your Pinecone API key:
+    Create a `.env` file in the root directory and configure the following environment variables:
     ```env
-    PINECONE_APIKEY=your_pinecone_api_key
+    PINECONE_API_KEY=your_pinecone_api_key
+    PINECONE_INDEX_HOST=your_pinecone_index_host  # Optional if not using a specific host
+    PINECONE_INDEX_NAME=your_index_name  # Must be all lowercase, up to 45 characters, with no special characters except '-'
+    PRODUCT_IMG_BASE_URL=your_image_base_url  # Base URL for product images
+    PRODUCT_IMG_SUFFIX=your_image_suffix  # Optional suffix for image URLs
+    CSV_FILE_PATH=your_csv_file_path  # Path to your CSV file containing the data
+    ```
+
+    Example of a `.env` file:
+    ```env
+    PINECONE_API_KEY=abc123xyz
+    PINECONE_INDEX_HOST=us-east-1-aws.pinecone.io
+    PINECONE_INDEX_NAME=product-search-index
+    PRODUCT_IMG_BASE_URL=https://images.example.com/products/
+    PRODUCT_IMG_SUFFIX=?imwidth=384
+    CSV_FILE_PATH=data/products.csv
+    ```
     ```
 
 4. **Download NLTK stopwords**:
@@ -53,6 +69,25 @@ This project demonstrates a real-time search application that utilizes pre-train
     ```python
     python -c "import nltk; nltk.download('stopwords')"
     ```
+
+## Embedding Instructions
+
+1. **Configure Your Environment**:
+   - Ensure your `.env` file is properly set up with the correct Pinecone API key, index details, and paths as described above.
+
+2. **Run the Embedding Script**:
+   - Execute the script to preprocess your data, generate embeddings, and store them in Pinecone:
+     ```bash
+     python preprocess_and_embed.py
+     ```
+   - This script will:
+     - Read the specified CSV file.
+     - Preprocess the text data, including cleaning and normalizing.
+     - Generate embeddings using a selected pre-trained transformer model.
+     - Store the embeddings in the specified Pinecone index.
+
+3. **Verify Embedding Storage**:
+   - Once the embeddings are stored, you can verify them by accessing your Pinecone dashboard or using Pinecone's CLI tools.
 
 ## Usage
 
@@ -72,7 +107,7 @@ This project demonstrates a real-time search application that utilizes pre-train
 
 3. **Search for Similar Items**:
     - Use the web interface to input a search query and find items with similar embeddings in the Pinecone index.
-    - The search results will be ranked based on cosine similarity, and the NDCG metric will be calculated to evaluate the relevance of the results.
+    - The search results will be ranked based on cosine similarity.
 
 ## Contributing
 
