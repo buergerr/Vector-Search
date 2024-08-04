@@ -14,7 +14,10 @@ COPY . /app
 COPY docker/entrypoint.sh /docker-entrypoint.sh
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
+
+# Expose the port
+EXPOSE 5000
 
 # Run the application
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
