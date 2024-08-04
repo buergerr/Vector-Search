@@ -1,0 +1,11 @@
+manufacturer,searchcolor,imageurl,sku,longdescrdisplay,shortdescrdisplay
+Sony,Black,/images/ps5.jpg,SKU12345,"The PlayStation 5 is the latest gaming console from Sony, featuring high-speed SSD, 8K support, and immersive haptic feedback.",PlayStation 5 Console
+Apple,White,/images/iphone13.jpg,SKU12346,"The iPhone 13 offers a powerful A15 Bionic chip, advanced dual-camera system, and a brighter Super Retina XDR display.",iPhone 13 Smartphone
+Samsung,Silver,/images/galaxy_s21.jpg,SKU12347,"Samsung Galaxy S21 comes with a dynamic AMOLED display, 108MP camera, and 5G support.",Samsung Galaxy S21 Phone
+Nike,Red,/images/nike_air_max.jpg,SKU12348,"Nike Air Max sneakers are known for their comfort, durability, and stylish design, making them a popular choice for athletes.",Nike Air Max Sneakers
+Dell,Black,/images/dell_xps13.jpg,SKU12349,"The Dell XPS 13 is a high-performance laptop with a stunning 13.3-inch InfinityEdge display, 11th Gen Intel Core processors, and long battery life.",Dell XPS 13 Laptop
+Canon,Black,/images/canon_eos_r6.jpg,SKU12350,"The Canon EOS R6 is a versatile mirrorless camera with 20.1 MP full-frame sensor, 4K video recording, and advanced image stabilization.",Canon EOS R6 Camera
+Adidas,Blue,images/adidas_ultraboost.jpg,SKU12351,"Adidas Ultraboost shoes are designed with responsive cushioning and adaptive knit upper for maximum comfort during runs.",Adidas Ultraboost Shoes
+Bose,White,images/bose_qc35.jpg,SKU12352,"Bose QuietComfort 35 II headphones offer world-class noise cancellation, balanced audio performance, and a comfortable fit.",Bose QuietComfort 35 II Headphones
+LG,Black,/images/lg_oled_tv.jpg,SKU12353,"The LG OLED TV features perfect blacks, infinite contrast, and cinematic colors, making it ideal for home theaters.",LG OLED TV
+Microsoft,Silver,/images/surface_pro7.jpg,SKU12354,"The Microsoft Surface Pro 7 is a 2-in-1 laptop with a 12.3-inch touchscreen, 10th Gen Intel Core processor, and long battery life.",Microsoft Surface Pro 7
