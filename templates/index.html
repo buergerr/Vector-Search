@@ -39,7 +39,23 @@
     </div>
 
     <h2>Search Results</h2>    
-    <div class="grid-container" id="results"></div>    
+    <div class="grid-container" id="results"></div>
+
+    <div class="grid-item" data-short-descr="{{ short_descr }}">
+        <img src="{{ image_url }}" alt="Product Image">
+        <p><strong>{{ short_descr }}</strong></p>
+        <p>Price: {{ minprice }}</p>
+        <p>Manufacturer: {{ manufacturer }}</p>
+    </div>    
+    
+    <!-- Modal structure for displaying related products -->
+    <div id="relatedModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Related Products</h2>
+            <div id="related-products-container" class="grid-container"></div>
+        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>

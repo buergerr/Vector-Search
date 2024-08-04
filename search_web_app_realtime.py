@@ -106,6 +106,43 @@ def search():
         'search_results': search_results
     })
 
+@app.route('/related-products', methods=['GET'])
+def related_products():
+    short_descr = request.args.get('short_descr')
+    print(f"Received request for related products for: {short_descr}")
+    index_name = request.args.get('index_name')  # Get index_name from query string
+
+    # Fetch the embedding for the selected short description
+    tokenizer, model, device = get_model_and_tokenizer(request.args.get('model_name'))
+    product_embedding = get_cached_embedding(short_descr, tokenizer, model, device)
+
+    # Query Pinecone for similar products using the stored embedding
+    index = pc.Index(index_name)
+    results = index.query(
+        vector=product_embedding.tolist(),
+        top_k=10,  # Number of related products to fetch
+        include_values=True,
+        include_metadata=True
+    )
+
+    related_products = []
+    base_url = os.getenv('PRODUCT_IMG_BASE_URL')
+    suffix = os.getenv('PRODUCT_IMG_SUFFIX')
+
+    for match in results['matches']:
+        if match['metadata']['shortdescrdisplay'] != short_descr:  # Exclude the clicked product from related products
+            image_url = base_url + match['metadata'].get('imageurl', 'default_image.jpg') + suffix
+            related_products.append({
+                'image_url': image_url,
+                'short_descr': match['metadata'].get('shortdescrdisplay', 'No description available'),
+                'minprice': match['metadata'].get('minprice', 'N/A'),
+                'manufacturer': match['metadata'].get('manufacturer', 'Unknown')
+            })
+
+    return jsonify({'related_products': related_products})
+
+
+
 # Start the Flask application
 if __name__ == '__main__':
     app.run(debug=True)
