@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, jsonify
 import os
 from dotenv import load_dotenv
 from config import MODEL_OPTIONS, INDEX_NAMES
-from utils.embedding_utils import create_embeddings, get_cached_embedding, compare_embeddings, initialize_pinecone
+from utils.embedding_utils import create_embeddings, get_cached_embedding, compare_embeddings, initialize_pinecone, normalize_text
 from utils.model_utils import initialize_model_and_tokenizer, move_model_to_device
 import numpy as np
 
@@ -35,10 +35,13 @@ def get_model_and_tokenizer(model_name):
 def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k=result_count):
     print(f"Search started with model '{model_name}' and index '{index_name}'")
 
+    # Normalize the search query
+    normalized_query = normalize_text(query)
+
     tokenizer, model, device = get_model_and_tokenizer(model_name)
     
     index = pc.Index(index_name)
-    query_embedding = get_cached_embedding(query, tokenizer, model, device)
+    query_embedding = get_cached_embedding(normalized_query, tokenizer, model, device)
 
     results = index.query(
         vector=query_embedding.tolist(),
@@ -84,6 +87,7 @@ def search_similar_items(query, index_name, model_name, cutoff_percentage, top_k
     print("Search completed.")
     return search_results
 
+
 @app.route('/health', methods=['GET'])
 def health():
     resp = jsonify(health="healthy")
@@ -117,11 +121,15 @@ def search():
 def related_products():
     short_descr = request.args.get('short_descr')
     print(f"Received request for related products for: {short_descr}")
+
+    # Normalize the short description before embedding
+    normalized_short_descr = normalize_text(short_descr)
+
     index_name = request.args.get('index_name')  # Get index_name from query string
 
     # Fetch the embedding for the selected short description
     tokenizer, model, device = get_model_and_tokenizer(request.args.get('model_name'))
-    product_embedding = get_cached_embedding(short_descr, tokenizer, model, device)
+    product_embedding = get_cached_embedding(normalized_short_descr, tokenizer, model, device)
 
     # Query Pinecone for similar products using the stored embedding
     index = pc.Index(index_name)
@@ -147,7 +155,6 @@ def related_products():
             })
 
     return jsonify({'related_products': related_products})
-
 
 
 # Start the Flask application
