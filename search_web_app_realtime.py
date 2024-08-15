@@ -5,6 +5,7 @@ from config import MODEL_OPTIONS, INDEX_NAMES
 from utils.embedding_utils import initialize_pinecone
 from utils.search_utils import search_similar_items
 from utils.related_search_utils import find_related_products  # Import from related_search_utils
+import csv
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -13,6 +14,15 @@ app = Flask(__name__)
 load_dotenv()
 
 result_count = 50  # Number of results to return
+
+# Path to the CSV file
+csv_file_path = 'event_log.csv'
+
+# Ensure the CSV file exists and write header if it doesn't
+if not os.path.exists(csv_file_path):
+    with open(csv_file_path, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(['Event Type', 'Search Query', 'Short Description', 'Product ID'])
 
 # Initialize Pinecone
 pc = initialize_pinecone(os.getenv('PINECONE_APIKEY'))
@@ -56,6 +66,24 @@ def related_products():
     related_products = find_related_products(short_descr, index_name, model_name, pc)
 
     return jsonify({'related_products': related_products})
+
+@app.route('/log-event', methods=['POST'])
+def log_event():
+    event_data = request.json
+
+    # Extract data from the JSON
+    event_type = event_data.get('event_type')
+    product_info = event_data.get('product_info', {})
+    search_query = event_data.get('search_query')
+    short_descr = product_info.get('shortDescr', '')
+    product_id = product_info.get('productId', '')
+
+    # Append the event to the CSV file
+    with open(csv_file_path, 'a', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow([event_type, search_query, short_descr, product_id])
+
+    return jsonify({'status': 'success'})
 
 # Start the Flask application
 if __name__ == '__main__':

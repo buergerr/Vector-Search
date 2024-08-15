@@ -4,3 +4,4 @@ __pycache__/*
 utils/__pycache__/*
 .venv/*
 config.py
+event_log.csv

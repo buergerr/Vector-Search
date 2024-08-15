@@ -3,7 +3,7 @@ import numpy as np
 from utils.embedding_utils import get_cached_embedding, normalize_text
 from utils.search_utils import get_model_and_tokenizer
 
-def find_related_products(short_descr, index_name, model_name, pc, top_k=10):
+def find_related_products(short_descr, index_name, model_name, pc, top_k=5):
     print(f"Received request for related products for: {short_descr}")
 
     # Normalize the short description before embedding

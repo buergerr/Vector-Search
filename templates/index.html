@@ -52,10 +52,12 @@
     <div id="relatedModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Related Products</h2>
+            <h2 id="modal-header"></h2>
+            <button id="add-to-basket-btn">Add to Basket</button> <!-- New Button -->
             <div id="related-products-container" class="grid-container"></div>
         </div>
     </div>
+
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>

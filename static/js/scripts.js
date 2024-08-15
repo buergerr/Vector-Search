@@ -60,9 +60,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Function to open the modal
-function openModal(shortDescr, indexName, modelName) {
+function openModal(shortDescr, indexName, modelName, productId) {
     const modal = document.getElementById('relatedModal');
     const relatedProductsContainer = document.getElementById('related-products-container');
+    const searchQuery = document.getElementById('query').value; // Get the current search query
+    
+    // Set the modal header to the product's short description
+    document.getElementById('modal-header').textContent = shortDescr;
+    
+    // Log the click event with the search query
+    logEvent('Click', { shortDescr, productId }, searchQuery);
+
     modal.style.display = 'block';
 
     // Fetch related products using AJAX
@@ -73,7 +81,7 @@ function openModal(shortDescr, indexName, modelName) {
             relatedProductsContainer.innerHTML = '';
 
             if (data.related_products) {
-                // Populate related products
+                // Populate related products and log events for unclicked products
                 data.related_products.forEach(product => {
                     const productItem = document.createElement('div');
                     productItem.className = 'grid-item';
@@ -84,6 +92,11 @@ function openModal(shortDescr, indexName, modelName) {
                         <p>Manufacturer: ${product.manufacturer}</p>
                     `;
                     relatedProductsContainer.appendChild(productItem);
+
+                    // Log the unclicked products with the search query
+                    if (product.productId !== productId) {
+                        logEvent('Not Clicked', product, searchQuery);
+                    }
                 });
             } else {
                 relatedProductsContainer.innerHTML = '<p>No related products found.</p>';
@@ -91,6 +104,7 @@ function openModal(shortDescr, indexName, modelName) {
         })
         .catch(error => console.error('Error:', error));
 }
+
 
 // Function to close the modal
 function closeModal() {
@@ -102,14 +116,22 @@ function closeModal() {
 document.addEventListener('click', function(e) {
     if (e.target.closest('.grid-item')) {
         const shortDescr = e.target.closest('.grid-item').dataset.shortDescr;
-        const indexName = document.getElementById('index_name').value; // Get index name
-        const modelName = document.getElementById('model_name').value; // Get model name
+        const indexName = document.getElementById('index_name').value;
+        const modelName = document.getElementById('model_name').value;
         openModal(shortDescr, indexName, modelName);
     }
 });
 
 // Event listener for the close button
 document.querySelector('.close').addEventListener('click', closeModal);
+
+// Event listener for "Add to Basket" button
+document.getElementById('add-to-basket-btn').addEventListener('click', function() {
+    const modalHeader = document.getElementById('modal-header').textContent;
+    const searchQuery = document.getElementById('query').value; // Get the current search query
+    logEvent('Add to Basket', { shortDescr: modalHeader }, searchQuery);
+    alert('Product added to basket!');
+});
 
 // Event listener to close the modal when clicking outside of it
 window.addEventListener('click', function(event) {
@@ -118,3 +140,19 @@ window.addEventListener('click', function(event) {
         modal.style.display = 'none';
     }
 });
+
+// Function to log events
+function logEvent(eventType, productInfo, searchQuery) {
+    fetch('/log-event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            event_type: eventType,
+            product_info: productInfo,
+            search_query: searchQuery
+        })
+    })
+    .catch(error => console.error('Error logging event:', error));
+}
